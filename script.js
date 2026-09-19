@@ -13,46 +13,8 @@ const prevPage2Btn = document.getElementById('prevPage2Btn');
 const page2Card = document.getElementById('page2Card');
 const page3Card = document.getElementById('page3Card');
 
-let isMusicPlaying = false;
-
-// دالة مساعدة لتشغيل الموسيقى وتحديث زر التحكم
-function startAudio() {
-    if (music && music.paused) {
-        music.volume = 0.5;
-        music.play().then(() => {
-            isMusicPlaying = true;
-            if (musicBtn) {
-                musicBtn.textContent = '🔊';
-                musicBtn.classList.add('playing');
-            }
-        }).catch(err => {
-            console.log('Autoplay blocked or audio file missing:', err);
-        });
-    }
-}
-
-// دالة إيقاف الموسيقى
-function pauseAudio() {
-    if (music) {
-        music.pause();
-        isMusicPlaying = false;
-        if (musicBtn) {
-            musicBtn.textContent = '🎵';
-            musicBtn.classList.remove('playing');
-        }
-    }
-}
-
-// تشغيل الموسيقى عند أول نقرة في أي مكان بالصفحة لتجاوز قيود المتصفح
-document.addEventListener('click', () => {
-    if (!isMusicPlaying) {
-        startAudio();
-    }
-}, { once: true });
-
 function createBgHearts() {
     const bgHearts = document.getElementById('bgHearts');
-    if (!bgHearts) return;
     const heartEmojis = ['💕', '💖', '💗', '💓', '💝', '❤️', '🩷'];
 
     for (let i = 0; i < 12; i++) {
@@ -107,69 +69,61 @@ function handleNoClick() {
     showCutePopup(currentMessage.text);
 
     const yesScale = 1 + noClickCount * 0.25;
-    if (yesBtn) {
-        yesBtn.style.transform = `scale(${Math.min(yesScale, 2.5)})`;
-        yesBtn.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    yesBtn.style.transform = `scale(${Math.min(yesScale, 2.5)})`;
+    yesBtn.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
 
-        if (noClickCount >= 3) {
-            yesBtn.style.boxShadow = '0 15px 50px rgba(255, 77, 148, 0.6)';
-        }
-        if (noClickCount >= 5) {
-            yesBtn.style.boxShadow = '0 20px 60px rgba(255, 77, 148, 0.8)';
-        }
+    if (noClickCount >= 3) {
+        yesBtn.style.boxShadow = '0 15px 50px rgba(255, 77, 148, 0.6)';
+    }
+    if (noClickCount >= 5) {
+        yesBtn.style.boxShadow = '0 20px 60px rgba(255, 77, 148, 0.8)';
     }
 
-    if (noBtn) {
-        const noScale = Math.max(1 - noClickCount * 0.15, 0.3);
-        noBtn.style.transform = `scale(${noScale})`;
-        noBtn.style.opacity = Math.max(1 - noClickCount * 0.12, 0.3);
-        noBtn.textContent = currentMessage.noText || 'No';
+    const noScale = Math.max(1 - noClickCount * 0.15, 0.3);
+    noBtn.style.transform = `scale(${noScale})`;
+    noBtn.style.opacity = Math.max(1 - noClickCount * 0.12, 0.3);
+    noBtn.textContent = currentMessage.noText || 'No';
 
-        if (noClickCount >= cuteMessages.length) {
-            noBtn.style.transition = 'all 0.5s ease';
-            noBtn.style.transform = 'scale(0)';
-            noBtn.style.opacity = '0';
-
-            setTimeout(() => {
-                noBtn.style.display = 'none';
-                showCutePopup('The No button gave up! Just click Yes! 💖');
-            }, 500);
-        }
-    }
-}
-
-if (noBtn) {
-    noBtn.addEventListener('click', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        handleNoClick();
-    });
-
-    noBtn.addEventListener('touchend', e => {
-        e.preventDefault();
-        handleNoClick();
-    }, { passive: false });
-}
-
-if (yesBtn) {
-    yesBtn.addEventListener('click', () => {
-        if (askCard) askCard.classList.add('hide');
+    if (noClickCount >= cuteMessages.length) {
+        noBtn.style.transition = 'all 0.5s ease';
+        noBtn.style.transform = 'scale(0)';
+        noBtn.style.opacity = '0';
 
         setTimeout(() => {
-            if (askCard) askCard.style.display = 'none';
-            if (resultCard) resultCard.classList.add('show');
-
-            // تشغيل الموسيقى فور الضغط على Yes
-            startAudio();
-
-            launchHearts();
-            launchConfetti();
-            launchFloatingPhotos();
-
-            setInterval(launchHearts, 6000);
+            noBtn.style.display = 'none';
+            showCutePopup('The No button gave up! Just click Yes! 💖');
         }, 500);
-    });
+    }
 }
+
+noBtn.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleNoClick();
+});
+
+noBtn.addEventListener('touchend', e => {
+    e.preventDefault();
+    handleNoClick();
+}, { passive: false });
+
+yesBtn.addEventListener('click', () => {
+    askCard.classList.add('hide');
+
+    setTimeout(() => {
+        askCard.style.display = 'none';
+        resultCard.classList.add('show');
+
+        music.volume = 0.5;
+        music.play().catch(() => console.log('Audio autoplay blocked'));
+
+        launchHearts();
+        launchConfetti();
+        launchFloatingPhotos();
+
+        setInterval(launchHearts, 6000);
+    }, 500);
+});
 
 function launchHearts() {
     const heartEmojis = ['❤️', '💖', '💕', '💗', '💓', '💝', '🩷', '💘', '💞'];
@@ -212,7 +166,7 @@ function launchConfetti() {
 }
 
 document.addEventListener('click', e => {
-    if (resultCard && resultCard.classList.contains('show')) {
+    if (resultCard.classList.contains('show')) {
         for (let i = 0; i < 5; i++) {
             const heart = document.createElement('div');
             heart.className = 'heart';
@@ -226,101 +180,102 @@ document.addEventListener('click', e => {
     }
 });
 
-// التحكم في زر الموسيقى العلوي
-if (musicBtn) {
-    musicBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        if (isMusicPlaying) {
-            pauseAudio();
-        } else {
-            startAudio();
-        }
-    });
+let isMusicPlaying = false;
+
+musicBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (isMusicPlaying) {
+        music.pause();
+        musicBtn.textContent = '🎵';
+        musicBtn.classList.remove('playing');
+        isMusicPlaying = false;
+    } else {
+        music.volume = 0.5;
+        music.play().then(() => {
+            musicBtn.textContent = '🔊';
+            musicBtn.classList.add('playing');
+            isMusicPlaying = true;
+        }).catch(() => {
+            console.log('Click to enable music');
+        });
+    }
+});
+
+setTimeout(() => {
+    musicBtn.style.animation = 'musicPulse 0.5s ease-in-out 3';
+}, 2000);
+
+nextPageBtn.addEventListener('click', () => {
+    resultCard.classList.add('flipping', 'flip-out');
 
     setTimeout(() => {
-        musicBtn.style.animation = 'musicPulse 0.5s ease-in-out 3';
-    }, 2000);
-}
+        resultCard.classList.remove('show', 'flipping', 'flip-out');
+        resultCard.style.display = 'none';
 
-if (nextPageBtn) {
-    nextPageBtn.addEventListener('click', () => {
-        resultCard.classList.add('flipping', 'flip-out');
+        page2Card.style.display = 'block';
+        page2Card.classList.add('show', 'flipping', 'flip-in');
+        wrapper.classList.add('letter-view');
 
-        setTimeout(() => {
-            resultCard.classList.remove('show', 'flipping', 'flip-out');
-            resultCard.style.display = 'none';
-
-            page2Card.style.display = 'block';
-            page2Card.classList.add('show', 'flipping', 'flip-in');
-            if (wrapper) wrapper.classList.add('letter-view');
-
-            launchHearts();
-
-            setTimeout(() => {
-                page2Card.classList.remove('flipping', 'flip-in');
-            }, 800);
-        }, 750);
-    });
-}
-
-if (prevPageBtn) {
-    prevPageBtn.addEventListener('click', () => {
-        page2Card.classList.add('flipping', 'flip-out-reverse');
+        launchHearts();
 
         setTimeout(() => {
-            page2Card.classList.remove('show', 'flipping', 'flip-out-reverse');
-            page2Card.style.display = 'none';
+            page2Card.classList.remove('flipping', 'flip-in');
+        }, 800);
+    }, 750);
+});
 
-            resultCard.style.display = 'block';
-            resultCard.classList.add('show', 'flipping', 'flip-in-reverse');
-            if (wrapper) wrapper.classList.remove('letter-view');
+prevPageBtn.addEventListener('click', () => {
+    page2Card.classList.add('flipping', 'flip-out-reverse');
 
-            setTimeout(() => {
-                resultCard.classList.remove('flipping', 'flip-in-reverse');
-            }, 800);
-        }, 750);
-    });
-}
+    setTimeout(() => {
+        page2Card.classList.remove('show', 'flipping', 'flip-out-reverse');
+        page2Card.style.display = 'none';
 
-if (nextPage2Btn) {
-    nextPage2Btn.addEventListener('click', () => {
-        page2Card.classList.add('flipping', 'flip-out');
+        resultCard.style.display = 'block';
+        resultCard.classList.add('show', 'flipping', 'flip-in-reverse');
+        wrapper.classList.remove('letter-view');
 
         setTimeout(() => {
-            page2Card.classList.remove('show', 'flipping', 'flip-out');
-            page2Card.style.display = 'none';
+            resultCard.classList.remove('flipping', 'flip-in-reverse');
+        }, 800);
+    }, 750);
+});
 
-            page3Card.style.display = 'block';
-            page3Card.classList.add('show', 'flipping', 'flip-in');
-            if (wrapper) wrapper.classList.add('letter-view');
+nextPage2Btn.addEventListener('click', () => {
+    page2Card.classList.add('flipping', 'flip-out');
 
-            launchHearts();
+    setTimeout(() => {
+        page2Card.classList.remove('show', 'flipping', 'flip-out');
+        page2Card.style.display = 'none';
 
-            setTimeout(() => {
-                page3Card.classList.remove('flipping', 'flip-in');
-            }, 800);
-        }, 750);
-    });
-}
+        page3Card.style.display = 'block';
+        page3Card.classList.add('show', 'flipping', 'flip-in');
+        wrapper.classList.add('letter-view');
 
-if (prevPage2Btn) {
-    prevPage2Btn.addEventListener('click', () => {
-        page3Card.classList.add('flipping', 'flip-out-reverse');
+        launchHearts();
 
         setTimeout(() => {
-            page3Card.classList.remove('show', 'flipping', 'flip-out-reverse');
-            page3Card.style.display = 'none';
+            page3Card.classList.remove('flipping', 'flip-in');
+        }, 800);
+    }, 750);
+});
 
-            page2Card.style.display = 'block';
-            page2Card.classList.add('show', 'flipping', 'flip-in-reverse');
-            if (wrapper) wrapper.classList.add('letter-view');
+prevPage2Btn.addEventListener('click', () => {
+    page3Card.classList.add('flipping', 'flip-out-reverse');
 
-            setTimeout(() => {
-                page2Card.classList.remove('flipping', 'flip-in-reverse');
-            }, 800);
-        }, 750);
-    });
-}
+    setTimeout(() => {
+        page3Card.classList.remove('show', 'flipping', 'flip-out-reverse');
+        page3Card.style.display = 'none';
+
+        page2Card.style.display = 'block';
+        page2Card.classList.add('show', 'flipping', 'flip-in-reverse');
+        wrapper.classList.add('letter-view');
+
+        setTimeout(() => {
+            page2Card.classList.remove('flipping', 'flip-in-reverse');
+        }, 800);
+    }, 750);
+});
 
 function launchFloatingPhotos() {
     const photos = [
